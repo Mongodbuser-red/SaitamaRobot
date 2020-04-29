@@ -1,34 +1,34 @@
 import importlib
 import re
 from typing import Optional, List
-
 from telegram import Bot, Update, ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.error import Unauthorized, BadRequest, TimedOut, NetworkError, ChatMigrated, TelegramError
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, Filters
 from telegram.ext.dispatcher import run_async, DispatcherHandlerStop
 from telegram.utils.helpers import escape_markdown
 
-from tg_bot import dispatcher, updater, TOKEN, WEBHOOK, OWNER_ID, SUPPORT_CHAT, DONATION_LINK, CERT_PATH, PORT, URL, LOGGER, \
+from tg_bot import dispatcher, updater, TOKEN, WEBHOOK, OWNER_ID, DONATION_LINK, CERT_PATH, PORT, URL, LOGGER, \
     ALLOW_EXCL
 # needed to dynamically load modules
 # NOTE: Module order is not guaranteed, specify that in the config file!
 from tg_bot.modules import ALL_MODULES
 from tg_bot.modules.helper_funcs.chat_status import is_user_admin
 from tg_bot.modules.helper_funcs.misc import paginate_modules
-
+Video_Maruya = 'tg_bot/Maruyama.mp4'
 PM_START_TEXT = """
-Hi {}, my name is {}! 
-I am an Anime themed group management bot.
-To add me to your group click ["HERE"](t.me/SaitamaRobot?startgroup=botstart)
-You can find my list of available commands with /help.
+<b>Hi {}, my name is {}! 
+I am a third-year student at Hanasakigawa Girl's High School and the lead singer of <u>Pastel Palettes</u>.
 
-[Saitama's Repo](github.com/AnimeKaizoku/SaitamaRobot) 
-See [Basic Configuration Checklist](t.me/OnePunchUpdates/29) on how to secure your group.
-The support group chat is at {}.
+I also works part-time at the fast food store with Kanon.
+
+I also has a personal blog. But I don't know
+how do I access it.
+
+The support group chat is at @Inime</b>
 """
 
 HELP_STRINGS = """
-Hey there! My name is *{}*.
+*Hey there! My name is {}.
 I'm a Hero For Fun and help admins manage their groups with One Punch! Have a look at the following for an idea of some of \
 the things I can help you with.
 
@@ -43,13 +43,13 @@ the things I can help you with.
 
 
 {}
-And the following:
+And the following:*
 """.format(dispatcher.bot.first_name, "" if not ALLOW_EXCL else "\nAll commands can either be used with / or !.\n")
 
-DONATE_STRING = """Heya, glad to hear you want to donate!
-Saitama is hosted on one of Kaizoku's Servers and doesn't require any donations as of now but \
+DONATE_STRING = """*Heya, glad to hear you want to donate!
+MaruyamaAya is hosted on one of Free Servers and doesn't require any donations as of now but \
 You can donate to the original writer of the Base code, Paul
-There are two ways of supporting him; [PayPal](paypal.me/PaulSonOfLars), or [Monzo](monzo.me/paulnionvestergaardlarsen)."""
+There are two ways of supporting him; [PayPal](paypal.me/PaulSonOfLars), or [Monzo](monzo.me/paulnionvestergaardlarsen).*"""
 
 IMPORTED = {}
 MIGRATEABLE = []
@@ -136,12 +136,15 @@ def start(bot: Bot, update: Update, args: List[str]):
                 IMPORTED["rules"].send_rules(update, args[0], from_pm=True)
 
         else:
+            Keyboard_mo = InlineKeyboardMarkup([[InlineKeyboardButton(text="Help",callback_data="help_back") , InlineKeyboardButton(text="Contact Owner",
+                                                                       url="t.me/But_why_god")],[InlineKeyboardButton(text="Join Support Chat",url="t.me/inime"),InlineKeyboardButton(text='Add me',url='http://t.me/{}?startgroup=true'.format(bot.username))]])
+            chat = update.effective_chat
             first_name = update.effective_user.first_name
-            update.effective_message.reply_text(
-                PM_START_TEXT.format(escape_markdown(first_name), escape_markdown(bot.first_name), SUPPORT_CHAT),
-                parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+            bot.send_video(chat.id,open(Video_Maruya,'rb'),
+                caption=PM_START_TEXT.format(escape_markdown(first_name), escape_markdown(bot.first_name)),parse_mode=ParseMode.HTML,
+                reply_markup=Keyboard_mo)
     else:
-        update.effective_message.reply_text("Yo, whadup?")
+        update.effective_message.reply_text("Hey!, What's up?")
 
 
 # for test purposes
@@ -235,13 +238,13 @@ def get_help(bot: Bot, update: Update):
                                             reply_markup=InlineKeyboardMarkup(
                                                 [[InlineKeyboardButton(text="Help",
                                                                        url="t.me/{}?start=help".format(
-                                                                           bot.username))]]))
+                                                                           bot.username)) , InlineKeyboardButton(text="Contact Owner",
+                                                                       url="t.me/But_why_god")],[InlineKeyboardButton(text="Join Support Chat",url='t.me/inime')]]))
         return
 
     elif len(args) >= 2 and any(args[1].lower() == x for x in HELPABLE):
         module = args[1].lower()
-        text = "Here is the available help for the *{}* module:\n".format(HELPABLE[module].__mod_name__) \
-               + HELPABLE[module].__help__
+        text = "*Here is the available help for the {} module:\n{}*".format(HELPABLE[module].__mod_name__ , HELPABLE[module].__help__)
         send_help(chat.id, text, InlineKeyboardMarkup([[InlineKeyboardButton(text="Back", callback_data="help_back")]]))
 
     else:
@@ -287,7 +290,7 @@ def settings_button(bot: Bot, update: Update):
             chat_id = mod_match.group(1)
             module = mod_match.group(2)
             chat = bot.get_chat(chat_id)
-            text = "*{}* has the following settings for the *{}* module:\n\n".format(escape_markdown(chat.title),
+            text = "*{} has the following settings for the {} module:*\n\n".format(escape_markdown(chat.title),
                                                                                      CHAT_SETTINGS[module].__mod_name__) + \
                    CHAT_SETTINGS[module].__chat_settings__(chat_id, user.id)
             query.message.reply_text(text=text,
