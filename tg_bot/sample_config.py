@@ -21,7 +21,7 @@ class Config(object):
     MESSAGE_DUMP = None  # needed to make sure 'save from' messages persist
     GBAN_LOGS = None #Channel ID here with -
     LOAD = []
-    NO_LOAD = ['translation', 'rss']   
+    NO_LOAD = ['translation', 'rss', 'wallpaper']   
     WEBHOOK = False
     URL = None
 
